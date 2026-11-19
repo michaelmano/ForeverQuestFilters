@@ -18,3 +18,4 @@ Modules\LeatrixMaps.lua
 Modules\BlizzardQuests.lua
 QuestList.lua
 QuestLogFilter.lua
+Menu.lua
