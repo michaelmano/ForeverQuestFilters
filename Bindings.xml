@@ -1,0 +1,11 @@
+<Bindings>
+    <Binding name="FQF_TOGGLE_COMPLETED" category="Forever Quest Filters">
+        ForeverQuestFilters.MapFilter:Toggle()
+    </Binding>
+    <Binding name="FQF_PEEK_COMPLETED" category="Forever Quest Filters" runOnUp="true">
+        ForeverQuestFilters.MapFilter:Peek(keystate == "down")
+    </Binding>
+    <Binding name="FQF_TOGGLE_LIST" category="Forever Quest Filters">
+        ForeverQuestFilters.QuestList:Toggle()
+    </Binding>
+</Bindings>
