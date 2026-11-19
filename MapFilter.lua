@@ -292,6 +292,9 @@ function MapFilter:Init()
 end
 
 function MapFilter:Debug()
+    local mapID = WorldMapFrame and WorldMapFrame.GetMapID and WorldMapFrame:GetMapID()
+    local info = mapID and C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(mapID)
+    ns.Print(("map %s (%s), filter %s"):format(tostring(mapID), info and info.name or "?", IsActive() and "on" or "off"))
     if ns.Menu and ns.Menu.discoveredTag then ns.Print("quest log settings menu: " .. ns.Menu.discoveredTag) end
     local counts = {}
     ForEachActivePin(function(template, pin)
@@ -303,12 +306,28 @@ function MapFilter:Debug()
                 if ok and v ~= nil then c.owner = m.name; break end
             end
         end
-        if ShouldKeep(pin, template) then c.kept = c.kept + 1 end
+        if ShouldKeep(pin, template) then
+            c.kept = c.kept + 1
+            -- is a kept marker actually drawn? (pin and the icon inside it)
+            local icon = rawget(pin, "icon")
+            local drawn = pin:IsVisible() and pin:GetEffectiveAlpha() > 0
+            if drawn and type(icon) == "table" and icon.IsVisible then
+                drawn = icon:IsVisible() and icon:GetEffectiveAlpha() > 0
+            end
+            if drawn then c.drawn = (c.drawn or 0) + 1
+            elseif not c.why then
+                c.why = ("pin shown %s alpha %.2f, icon shown %s alpha %.2f"):format(
+                    tostring(pin:IsShown()), pin:GetAlpha(),
+                    type(icon) == "table" and icon.IsShown and tostring(icon:IsShown()) or "-",
+                    type(icon) == "table" and icon.GetAlpha and icon:GetAlpha() or -1)
+            end
+        end
         counts[template] = c
     end)
     if not next(counts) then ns.Print("No pins found (open the world map first).") end
     for template, c in pairs(counts) do
-        ns.Print(("%s: %d pins, %d kept, module: %s"):format(template, c.n, c.kept, c.owner))
+        ns.Print(("%s: %d pins, %d kept (%d drawn), module: %s"):format(template, c.n, c.kept, c.drawn or 0, c.owner))
+        if c.why then ns.Print("   first kept but not drawn: " .. c.why) end
     end
 
     -- Frames addons put straight on the canvas, outside the pin system,
