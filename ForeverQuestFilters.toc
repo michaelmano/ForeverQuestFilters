@@ -14,5 +14,6 @@ MapFilter.lua
 Modules\BaseMap.lua
 Modules\Questie.lua
 Modules\ForeverQuestPins.lua
+Modules\OneForAll.lua
 Modules\BlizzardQuests.lua
 QuestList.lua
