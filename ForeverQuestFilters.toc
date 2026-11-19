@@ -10,4 +10,9 @@
 
 
 Core.lua
+MapFilter.lua
+Modules\BaseMap.lua
+Modules\Questie.lua
+Modules\ForeverQuestPins.lua
+Modules\BlizzardQuests.lua
 QuestList.lua

@@ -1,0 +1,26 @@
+-- Copy this to Modules/<AddonName>.lua and add the file to ForeverQuestFilters.toc
+-- (under the other Modules\ lines). Use "/fqf debug" with the map open to see
+-- the pin template names on the current map and which module claims each.
+local _, ns = ...
+
+ns.MapFilter:RegisterModule({
+    name = "MyAddon",       -- shown in /fqf modules, used by /fqf module MyAddon off
+    addon = "MyAddon",      -- folder name; module is skipped if it isn't loaded
+    priority = 50,          -- lower runs first
+
+    -- true = completed-quest marker (keep), false = hide, nil = not mine
+    Classify = function(pin, template)
+        if template ~= "MyAddonPinTemplate" then return nil end
+        return false
+    end,
+
+    -- For addons that put plain frames straight on the map canvas instead of
+    -- using map pins (like OneForAll). Same return values as Classify.
+    -- Unclaimed canvas frames are hidden anyway; only needed to KEEP some.
+    -- ClassifyFrame = function(frame) return nil end,
+
+    -- Optional hooks:
+    -- Init      = function(self) end,  -- once, when the addon is loaded
+    -- OnEnable  = function(self) end,  -- filter turned on
+    -- OnDisable = function(self) end,  -- filter turned off
+})
