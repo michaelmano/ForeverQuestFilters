@@ -9,6 +9,6 @@ ns.MapFilter:RegisterModule({
     Classify = function(pin)
         local questID = rawget(pin, "questID")
         if not questID then return nil end
-        return ns.IsQuestComplete(questID)
+        return ns.MapFilter:KeepQuest(questID, ns.IsQuestComplete(questID))
     end,
 })

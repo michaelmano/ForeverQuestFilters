@@ -11,6 +11,8 @@ ns.MapFilter:RegisterModule({
         local icon = rawget(pin, "icon")
         local data = type(icon) == "table" and rawget(icon, "data")
         if type(data) ~= "table" or data.Type == nil then return nil end -- another HBD user (e.g. TomTom)
-        return data.Type == "complete"
+        -- data.Id is the quest; "complete" is its turn-in icon. Anything else
+        -- (available "!", objectives) only passes in tracked-only mode.
+        return ns.MapFilter:KeepQuest(data.Id, data.Type == "complete")
     end,
 })

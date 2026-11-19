@@ -124,7 +124,7 @@ local function DrawWorldMarkers()
     -- group completed quests by turn-in spot
     local spots, order = {}, {}
     for _, e in ipairs(ns.questList) do
-        if e.complete then
+        if e.complete and ns.MapFilter:KeepQuest(e.questID, true) then
             local ok, loc = pcall(ofa.QuestPinLoc, e.questID, true)
             if ok and type(loc) == "table" and loc.mapID and loc.x and loc.y then
                 local rect = ZoneRectOn(loc.mapID, mapID)
@@ -192,6 +192,8 @@ module = ns.MapFilter:RegisterModule({
         ScheduleDraw()
     end,
 
+    OnModeChanged = function() ScheduleDraw() end,
+
     OnDisable = function(self)
         self.drawing = false
         HideMarkers()
@@ -204,7 +206,12 @@ module = ns.MapFilter:RegisterModule({
             if not inPool[frame] then return nil end
         end
         local spot = rawget(frame, "spot")
-        if type(spot) ~= "table" then return false end
-        return type(spot.turnin) == "table" and #spot.turnin > 0
+        if type(spot) ~= "table" or type(spot.turnin) ~= "table" then return false end
+        -- "?" spots list the completed quests turned in there; "!" spots only
+        -- offer quests you don't have yet, so they never pass
+        for _, id in ipairs(spot.turnin) do
+            if ns.MapFilter:KeepQuest(id, true) then return true end
+        end
+        return false
     end,
 })

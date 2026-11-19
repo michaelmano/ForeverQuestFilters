@@ -113,6 +113,9 @@ local function ModifyMapMenu(_, root)
         ("Completed quests only (%d)"):format(ns.CompletedCount()),
         function() return ns.MapFilter.IsToggled() end,
         function() ns.MapFilter:Toggle() end))
+    root:Insert(MenuUtil.CreateCheckbox("Tracked quests only",
+        function() return ns.MapFilter.IsTrackedOnly() end,
+        function() ns.MapFilter:ToggleTracked() end))
     if MenuUtil.CreateButton then
         root:Insert(MenuUtil.CreateButton("Sortable quest list...", function() ns.QuestList:Toggle() end))
     end

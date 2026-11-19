@@ -8,10 +8,14 @@ ns.MapFilter:RegisterModule({
     addon = "MyAddon",      -- folder name; module is skipped if it isn't loaded
     priority = 50,          -- lower runs first
 
-    -- true = completed-quest marker (keep), false = hide, nil = not mine
+    -- true = keep, false = hide, nil = not mine.
+    -- For a quest marker, let the filter decide with KeepQuest(questID, isTurnIn):
+    -- it applies whichever modes are on (completed only, tracked only).
     Classify = function(pin, template)
         if template ~= "MyAddonPinTemplate" then return nil end
-        return false
+        local questID = pin.questID          -- however the addon stores it
+        if not questID then return false end -- not a quest marker: hide
+        return ns.MapFilter:KeepQuest(questID, pin.isTurnIn)
     end,
 
     -- For addons that put plain frames straight on the map canvas instead of

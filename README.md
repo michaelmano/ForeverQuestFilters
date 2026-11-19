@@ -15,6 +15,10 @@ top of them: one checkbox hides everything except the quests you can hand in.
   own completed quest pins). Quest start `!` markers, objective icons and other
   addons' map icons are hidden too. Your player arrow, party members, zone
   highlights, labels and your map waypoint stay visible.
+- **Tracked quests only on the map.** Hides every marker except those for the
+  quests you're tracking: their objectives and, once complete, their turn-in.
+  Turn it on together with completed-only to see just tracked quests that are
+  ready to hand in. Uses Questie's tracker when it's on, otherwise the game's.
 - **Hold-to-peek keybind.** Hold a key to see completed-only markers for a
   moment and let go to bring everything back. There's also a toggle keybind.
 - **Quest log filtering and sorting.** Show only completed quests in the quest
@@ -54,6 +58,9 @@ Open the world map's filter dropdown. At the bottom, under
 
 - **Completed quests only (N)**: toggles completed-only markers. N is the number
   of quests in your log ready to turn in.
+- **Tracked quests only**: toggles tracked-only markers.
+
+Both settings are remembered between sessions.
 - **Sortable quest list...**: opens the quest list window.
 
 ### Quest log
@@ -81,6 +88,7 @@ Under Options → Keybindings → Forever Quest Filters:
 | Command | Does |
 |---|---|
 | `/fqf` | Toggle completed-only map markers |
+| `/fqf tracked` | Toggle tracked-only map markers |
 | `/fqf log` | Toggle completed quests only in the quest log |
 | `/fqf sort` | Toggle completed-first sorting in the quest log |
 | `/fqf list` | Toggle the sortable quest list window |

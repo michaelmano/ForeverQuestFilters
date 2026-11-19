@@ -12,6 +12,7 @@ local DEFAULTS = {
     listPoint = nil,
     disabledModules = {},
     mapCompletedOnly = false,
+    mapTrackedOnly = false,
     questLogCompletedOnly = false,
     questLogSortCompleted = false,
 }
@@ -94,6 +95,34 @@ function ns.IsQuestComplete(questID)
     return false
 end
 
+-- Is this quest tracked? When Questie's tracker is on, Questie decides what is
+-- tracked (its own list); otherwise the game's quest watch list does.
+local function QuestieTracking(questID)
+    local q = rawget(_G, "Questie")
+    local db = type(q) == "table" and rawget(q, "db")
+    if type(db) ~= "table" then return nil end
+    local ok, profile, char = pcall(function() return db.profile, db.char end)
+    if not ok or type(profile) ~= "table" or type(char) ~= "table" then return nil end
+    if not profile.trackerEnabled then return nil end
+    if profile.autoTrackQuests then
+        return not (char.AutoUntrackedQuests and char.AutoUntrackedQuests[questID])
+    end
+    return (char.TrackedQuests and char.TrackedQuests[questID]) and true or false
+end
+
+function ns.IsQuestTracked(questID)
+    if not questID or questID == 0 then return false end
+    if not ns.questInfo[questID] then return false end -- only quests in your log can be tracked
+    local viaQuestie = QuestieTracking(questID)
+    if viaQuestie ~= nil then return viaQuestie end
+    if C_QuestLog and C_QuestLog.GetQuestWatchType then
+        return Call(C_QuestLog.GetQuestWatchType, questID) ~= nil
+    end
+    local e = ns.questInfo[questID]
+    if IsQuestWatched and e and e.index then return Call(IsQuestWatched, e.index) and true or false end
+    return false
+end
+
 function ns.OnScan(fn) ns.listeners[#ns.listeners + 1] = fn end
 
 local pending = false
@@ -111,6 +140,7 @@ f:RegisterEvent("QUEST_ACCEPTED")
 f:RegisterEvent("QUEST_REMOVED")
 f:RegisterEvent("QUEST_TURNED_IN")
 f:RegisterEvent("UNIT_QUEST_LOG_CHANGED")
+for _, ev in ipairs({ "QUEST_WATCH_LIST_CHANGED", "QUEST_WATCH_UPDATE" }) do pcall(f.RegisterEvent, f, ev) end
 f:SetScript("OnEvent", function(_, event, arg1)
     if event == "ADDON_LOADED" then
         if arg1 == ADDON then
@@ -144,6 +174,9 @@ SlashCmdList.FOREVERQUESTFILTERS = function(msg)
     if msg == "log" then
         ns.QuestLogFilter:Toggle()
         ns.Print("quest log completed-only: " .. (ns.db.questLogCompletedOnly and "on" or "off"))
+    elseif msg == "tracked" then
+        ns.MapFilter:ToggleTracked()
+        ns.Print("tracked quests only on the map: " .. (ns.MapFilter.IsTrackedOnly() and "on" or "off"))
     elseif msg == "sort" then
         ns.QuestLogFilter:ToggleSort()
         ns.Print("quest log sort completed first: " .. (ns.db.questLogSortCompleted and "on" or "off"))
@@ -161,6 +194,7 @@ SlashCmdList.FOREVERQUESTFILTERS = function(msg)
     else
         ns.Print("/fqf  - toggle completed-only map markers")
         ns.Print("/fqf log  - toggle completed-only in the quest log")
+        ns.Print("/fqf tracked  - toggle tracked-only map markers")
         ns.Print("/fqf sort  - toggle completed-first sorting in the quest log")
         ns.Print("/fqf list  - toggle the sortable quest list")
         ns.Print("/fqf modules  - list filter modules")

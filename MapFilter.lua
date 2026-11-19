@@ -26,13 +26,26 @@ ns.MapFilter = MapFilter
 ]]
 
 local modules = {}
-local toggled, peeking = false, false
+local toggled, peeking = false, false -- "completed quests only" (saved) / hold-to-peek
+local trackedOnly = false              -- "tracked quests only" (saved)
 local hidden = setmetatable({}, { __mode = "k" })
 local ticker, scheduled
 
-local function IsActive() return toggled or peeking end
+local function IsActive() return toggled or peeking or trackedOnly end
 MapFilter.IsActive = IsActive
 function MapFilter.IsToggled() return toggled end
+function MapFilter.IsTrackedOnly() return trackedOnly end
+
+-- The one rule every module asks about a quest marker. isTurnIn = the marker is
+-- where a completed quest is handed in. A marker passes only if it fits every
+-- mode that is on: completed-only keeps turn-ins, tracked-only keeps markers of
+-- tracked quests. Markers that aren't for a quest are hidden by the modules.
+function MapFilter:KeepQuest(questID, isTurnIn)
+    if not questID then return false end
+    if (toggled or peeking) and not isTurnIn then return false end
+    if trackedOnly and not ns.IsQuestTracked(questID) then return false end
+    return true
+end
 
 local function IsAddOnLoadedCompat(name)
     if C_AddOns and C_AddOns.IsAddOnLoaded then return C_AddOns.IsAddOnLoaded(name) end
@@ -192,9 +205,14 @@ local function ApplyFilter()
     local isPin = {}
     ForEachActivePin(function(template, pin)
         isPin[pin] = true
-        if pin:IsShown() and not ShouldKeep(pin, template) then
+        local keep = ShouldKeep(pin, template)
+        if pin:IsShown() and not keep then
             pin:Hide()
             hidden[pin] = true
+        elseif keep and hidden[pin] and not pin:IsShown() then
+            -- hidden under another mode (e.g. completed-only), wanted now
+            pin:Show()
+            hidden[pin] = nil
         end
     end)
     for _, frame in ipairs(CanvasChildren()) do
@@ -223,6 +241,13 @@ end
 
 local function StateChanged(wasActive)
     local nowActive = IsActive()
+    if nowActive and wasActive then
+        -- still filtering, but which markers pass changed
+        for _, m in ipairs(modules) do
+            if m.initialized and Enabled(m) then SafeCall(m, "OnModeChanged") end
+        end
+        ApplyFilter()
+    end
     if nowActive ~= wasActive then
         for _, m in ipairs(modules) do
             if m.initialized and Enabled(m) then SafeCall(m, nowActive and "OnEnable" or "OnDisable") end
@@ -242,6 +267,18 @@ function MapFilter:Toggle()
     toggled = not toggled
     if ns.db then ns.db.mapCompletedOnly = toggled end -- remembered across reloads
     StateChanged(was)
+end
+
+function MapFilter:ToggleTracked()
+    local was = IsActive()
+    trackedOnly = not trackedOnly
+    if ns.db then ns.db.mapTrackedOnly = trackedOnly end
+    StateChanged(was)
+end
+
+-- tracking changed (a quest was tracked or untracked): re-check the markers
+function MapFilter:TrackingChanged()
+    if trackedOnly then StateChanged(IsActive()) end
 end
 
 function MapFilter:Peek(down)
@@ -291,10 +328,12 @@ function MapFilter:Init()
     WorldMapFrame:HookScript("OnShow", ScheduleApply)
 
     -- restore the saved setting (the hold-to-peek keybind is never saved)
-    if ns.db and ns.db.mapCompletedOnly and not toggled then
-        toggled = true
-        StateChanged(false)
-    end
+    ns.OnScan(function() MapFilter:TrackingChanged() end)
+
+    local was = IsActive()
+    if ns.db and ns.db.mapCompletedOnly then toggled = true end
+    if ns.db and ns.db.mapTrackedOnly then trackedOnly = true end
+    if IsActive() ~= was then StateChanged(was) end
 
 end
 
