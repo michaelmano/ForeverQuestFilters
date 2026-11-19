@@ -31,7 +31,7 @@ top of them: one checkbox hides everything except the quests you can hand in.
 |---|---|
 | Questie | Turn-in icons stay, all other icons are hidden |
 | Forever Quest Pins | All `!` quest start markers are hidden |
-| OneForAll | `?` turn-in icons stay, `!` icons and walking routes are hidden |
+| OneForAll | `?` turn-in icons stay, `!` icons and walking routes are hidden. On the world view, where OneForAll draws nothing, `?` markers for your completed quests are added from OneForAll's turn-in data |
 | Leatrix Maps | Its POI icons are hidden; revealed areas and overlays stay |
 | WoW Forever (default) | Quest pins stay only for completed quests |
 | Anything else | Small icons drawn on the map are hidden |
@@ -130,8 +130,8 @@ ns.MapFilter:RegisterModule({
 
 ## Known limitations
 
-- On the fully zoomed-out world view, there may be no turn-in markers to show,
-  depending on which addons draw at that zoom level.
+- On the fully zoomed-out world view, turn-in markers come from Questie, or
+  from OneForAll's data when Questie is off. With neither, there are none to show.
 - In Forever's stitched map mode, Questie's markers may not be filtered.
 - Quests under a collapsed zone in the quest log may be missing from the
   sortable list until that zone is expanded.
