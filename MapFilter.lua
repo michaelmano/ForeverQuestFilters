@@ -311,13 +311,13 @@ function MapFilter:Debug()
         ns.Print(("%s: %d pins, %d kept, module: %s"):format(template, c.n, c.kept, c.owner))
     end
 
-    -- Frames addons put straight on the canvas, outside the pin system.
+    -- Frames addons put straight on the canvas, outside the pin system,
+    -- grouped by texture + module + verdict so the whole map fits in a few lines.
     local isPin = {}
     ForEachActivePin(function(_, pin) isPin[pin] = true end)
-    local n = 0
+    local groups, order = {}, {}
     for _, frame in ipairs(CanvasChildren()) do
         if not isPin[frame] and frame:IsShown() then
-            n = n + 1
             local m = FrameOwner(frame)
             local tex
             for _, r in ipairs({ frame:GetRegions() }) do
@@ -326,13 +326,14 @@ function MapFilter:Debug()
                     if tex then break end
                 end
             end
-            if n <= 15 then
-                ns.Print(("canvas frame %s: texture %s, size %dx%d, module: %s, %s"):format(
-                    frame:GetName() or frame:GetDebugName() or "?", tostring(tex),
-                    frame:GetWidth() or 0, frame:GetHeight() or 0,
-                    m and m.name or "none", ShouldKeepFrame(frame) and "kept" or "hidden"))
-            end
+            local key = ("texture %s, size %dx%d, module: %s, %s"):format(tostring(tex),
+                frame:GetWidth() or 0, frame:GetHeight() or 0,
+                m and m.name or "none", ShouldKeepFrame(frame) and "kept" or "hidden")
+            if not groups[key] then groups[key] = 0; order[#order + 1] = key end
+            groups[key] = groups[key] + 1
         end
     end
-    if n > 15 then ns.Print(("...and %d more canvas frames"):format(n - 15)) end
+    for _, key in ipairs(order) do
+        ns.Print(("canvas frames x%d: %s"):format(groups[key], key))
+    end
 end
