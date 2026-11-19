@@ -135,3 +135,7 @@ ns.MapFilter:RegisterModule({
 - In Forever's stitched map mode, Questie's markers may not be filtered.
 - Quests under a collapsed zone in the quest log may be missing from the
   sortable list until that zone is expanded.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
