@@ -11,6 +11,7 @@ local DEFAULTS = {
     completedOnly = false,
     listPoint = nil,
     disabledModules = {},
+    mapCompletedOnly = false,
     questLogCompletedOnly = false,
     questLogSortCompleted = false,
 }

@@ -240,6 +240,7 @@ end
 function MapFilter:Toggle()
     local was = IsActive()
     toggled = not toggled
+    if ns.db then ns.db.mapCompletedOnly = toggled end -- remembered across reloads
     StateChanged(was)
 end
 
@@ -288,6 +289,12 @@ function MapFilter:Init()
     hooksecurefunc(WorldMapFrame, "AcquirePin", ScheduleApply)
     if WorldMapFrame.OnMapChanged then hooksecurefunc(WorldMapFrame, "OnMapChanged", ScheduleApply) end
     WorldMapFrame:HookScript("OnShow", ScheduleApply)
+
+    -- restore the saved setting (the hold-to-peek keybind is never saved)
+    if ns.db and ns.db.mapCompletedOnly and not toggled then
+        toggled = true
+        StateChanged(false)
+    end
 
 end
 
