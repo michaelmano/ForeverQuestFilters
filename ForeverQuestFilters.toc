@@ -17,3 +17,4 @@ Modules\OneForAll.lua
 Modules\LeatrixMaps.lua
 Modules\BlizzardQuests.lua
 QuestList.lua
+QuestLogFilter.lua
