@@ -8,12 +8,12 @@
 ## SavedVariables: ForeverQuestFiltersDB
 ## IconTexture: Interface\GossipFrame\ActiveQuestIcon
 
-
 Core.lua
 MapFilter.lua
 Modules\BaseMap.lua
 Modules\Questie.lua
 Modules\ForeverQuestPins.lua
 Modules\OneForAll.lua
+Modules\LeatrixMaps.lua
 Modules\BlizzardQuests.lua
 QuestList.lua
