@@ -59,3 +59,7 @@ jobs:
 
       - name: Package and upload
         uses: BigWigsMods/packager@v2
+        with:
+          # zip name : release name. Without this the packager adds the game
+          # flavour, e.g. "1.0.2-forever".
+          args: -n "{package-name}-{project-version}:{package-name}-{project-version}"
