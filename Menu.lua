@@ -41,7 +41,7 @@ local function FindObjectivesIndex(root)
 end
 
 local function LogItems()
-    return {
+    local items = {
         MenuUtil.CreateCheckbox("Completed quests only",
             function() return ns.QuestLogFilter:IsOn() end,
             function() ns.QuestLogFilter:Toggle() end),
@@ -49,6 +49,12 @@ local function LogItems()
             function() return ns.QuestLogFilter:IsSorted() end,
             function() ns.QuestLogFilter:ToggleSort() end),
     }
+    if MenuUtil.CreateButton then
+        items[#items + 1] = MenuUtil.CreateButton(
+            ("Create hand-in route (%d)..."):format(ns.CompletedCount()),
+            function() ns.Route:Create() end)
+    end
+    return items
 end
 
 local function ModifyLogMenu(_, root)

@@ -76,6 +76,8 @@ Open the quest log's settings dropdown. Under **Show Quest Objectives**:
 
 - **Completed quests only**
 - **Sort completed quests first**
+- **Create hand-in route (N)...**: opens the hand-in route; N is how many
+  quests are ready to turn in
 
 Both settings are saved between sessions. While either one is on, the game's
 quest list is hidden and the addon draws its own list in the same place.
@@ -84,7 +86,7 @@ filter the addon's list.
 
 ### Hand-in route
 
-**Create hand-in route...** (or `/fqf route`) lists every stop in order: the NPC,
+**Create hand-in route...** in either dropdown (or `/fqf route`) lists every stop in order: the NPC,
 the zone, the walking distance from the previous stop, and the quests handed in
 there. Quests turned in to the same NPC are one stop, and for an NPC that stands
 in more than one place, the closest spot is used.
