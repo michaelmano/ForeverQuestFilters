@@ -2,8 +2,8 @@ local ADDON, ns = ...
 ForeverQuestFilters = ns
 
 BINDING_HEADER_FQF = "Forever Quest Filters"
-BINDING_NAME_FQF_TOGGLE_COMPLETED = "Toggle completed-only map markers"
-BINDING_NAME_FQF_PEEK_COMPLETED = "Hold to show completed-only map markers"
+BINDING_NAME_FQF_TOGGLE_COMPLETED = "Toggle quest marker filter (off / last used)"
+BINDING_NAME_FQF_PEEK_COMPLETED = "Hold to show ready-to-turn-in markers"
 BINDING_NAME_FQF_TOGGLE_LIST = "Toggle sortable quest list"
 
 local DEFAULTS = {
@@ -11,8 +11,7 @@ local DEFAULTS = {
     completedOnly = false,
     listPoint = nil,
     disabledModules = {},
-    mapCompletedOnly = false,
-    mapTrackedOnly = false,
+    mapMode = nil, -- set on first load (carries over the old checkboxes)
     questLogCompletedOnly = false,
     questLogSortCompleted = false,
 }
@@ -177,9 +176,14 @@ SlashCmdList.FOREVERQUESTFILTERS = function(msg)
         ns.Print("quest log completed-only: " .. (ns.db.questLogCompletedOnly and "on" or "off"))
     elseif msg == "route" then
         ns.Route:Toggle()
-    elseif msg == "tracked" then
-        ns.MapFilter:ToggleTracked()
-        ns.Print("tracked quests only on the map: " .. (ns.MapFilter.IsTrackedOnly() and "on" or "off"))
+    elseif msg == "mode" or msg:match("^mode%s") or msg == "tracked" or msg == "turnin" or msg == "both" or msg == "all" then
+        local m = msg:match("^mode%s+(%S+)") or msg
+        if not ns.MapFilter.MODE_LABELS[m] then
+            ns.Print("modes: all, turnin, tracked, both")
+        else
+            ns.MapFilter:SetMode(m)
+        end
+        ns.Print("quest markers: " .. ns.MapFilter.MODE_LABELS[ns.MapFilter.GetMode()])
     elseif msg == "sort" then
         ns.QuestLogFilter:ToggleSort()
         ns.Print("quest log sort completed first: " .. (ns.db.questLogSortCompleted and "on" or "off"))
@@ -187,6 +191,7 @@ SlashCmdList.FOREVERQUESTFILTERS = function(msg)
         ns.QuestList:Toggle()
     elseif msg == "map" or msg == "" then
         ns.MapFilter:Toggle()
+        ns.Print("quest markers: " .. ns.MapFilter.MODE_LABELS[ns.MapFilter.GetMode()])
     elseif msg == "debug" then
         ns.MapFilter:Debug()
     elseif msg == "modules" then
@@ -195,10 +200,10 @@ SlashCmdList.FOREVERQUESTFILTERS = function(msg)
         local name, state = msg:match("^module%s+(%S+)%s*(%S*)")
         if name then ns.MapFilter:SetModuleEnabled(name, state ~= "off") end
     else
-        ns.Print("/fqf  - toggle completed-only map markers")
+        ns.Print("/fqf  - quest marker filter off / back to the last one used")
+        ns.Print("/fqf mode all|turnin|tracked|both  - pick which quest markers show")
         ns.Print("/fqf log  - toggle completed-only in the quest log")
         ns.Print("/fqf route  - create the hand-in route for your completed quests")
-        ns.Print("/fqf tracked  - toggle tracked-only map markers")
         ns.Print("/fqf sort  - toggle completed-first sorting in the quest log")
         ns.Print("/fqf list  - toggle the sortable quest list")
         ns.Print("/fqf modules  - list filter modules")

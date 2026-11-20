@@ -26,24 +26,39 @@ ns.MapFilter = MapFilter
 ]]
 
 local modules = {}
-local toggled, peeking = false, false -- "completed quests only" (saved) / hold-to-peek
-local trackedOnly = false              -- "tracked quests only" (saved)
+-- Which quest markers the map shows. One choice, saved:
+--   all     - no filtering
+--   turnin  - ready to turn in: turn-in markers of completed quests
+--   tracked - tracked quests: their objectives and turn-in
+--   both    - tracked + ready to turn in: tracked quests' markers and every turn-in
+-- The hold-to-peek keybind shows "turnin" while held, whatever the choice.
+local MODES = { "all", "turnin", "tracked", "both" }
+MapFilter.MODES = MODES
+MapFilter.MODE_LABELS = {
+    all = "All markers",
+    turnin = "Ready to turn in",
+    tracked = "Tracked quests",
+    both = "Tracked + ready to turn in",
+}
+local mode, peeking = "all", false
+local lastMode = "turnin" -- what the toggle keybind / plain /fqf switches back to
 local hidden = setmetatable({}, { __mode = "k" })
 local ticker, scheduled
 
-local function IsActive() return toggled or peeking or trackedOnly end
+local function Effective() return peeking and "turnin" or mode end
+local function IsActive() return Effective() ~= "all" end
 MapFilter.IsActive = IsActive
-function MapFilter.IsToggled() return toggled end
-function MapFilter.IsTrackedOnly() return trackedOnly end
+function MapFilter.GetMode() return mode end
 
 -- The one rule every module asks about a quest marker. isTurnIn = the marker is
--- where a completed quest is handed in. A marker passes only if it fits every
--- mode that is on: completed-only keeps turn-ins, tracked-only keeps markers of
--- tracked quests. Markers that aren't for a quest are hidden by the modules.
+-- where a completed quest is handed in. Markers that aren't for a quest are
+-- hidden by the modules themselves.
 function MapFilter:KeepQuest(questID, isTurnIn)
     if not questID then return false end
-    if (toggled or peeking) and not isTurnIn then return false end
-    if trackedOnly and not ns.IsQuestTracked(questID) then return false end
+    local m = Effective()
+    if m == "turnin" then return isTurnIn and true or false end
+    if m == "tracked" then return ns.IsQuestTracked(questID) end
+    if m == "both" then return (isTurnIn and true) or ns.IsQuestTracked(questID) end
     return true
 end
 
@@ -262,23 +277,24 @@ local function StateChanged(wasActive)
     end
 end
 
-function MapFilter:Toggle()
+function MapFilter:SetMode(newMode)
+    if not MapFilter.MODE_LABELS[newMode] then return end
     local was = IsActive()
-    toggled = not toggled
-    if ns.db then ns.db.mapCompletedOnly = toggled end -- remembered across reloads
+    mode = newMode
+    if mode ~= "all" then lastMode = mode end
+    if ns.db then ns.db.mapMode = mode; ns.db.mapLastMode = lastMode end -- remembered across reloads
     StateChanged(was)
 end
 
-function MapFilter:ToggleTracked()
-    local was = IsActive()
-    trackedOnly = not trackedOnly
-    if ns.db then ns.db.mapTrackedOnly = trackedOnly end
-    StateChanged(was)
+-- the toggle keybind and plain /fqf: off <-> the last filter you used
+function MapFilter:Toggle()
+    self:SetMode(mode == "all" and lastMode or "all")
 end
 
 -- tracking changed (a quest was tracked or untracked): re-check the markers
 function MapFilter:TrackingChanged()
-    if trackedOnly then StateChanged(IsActive()) end
+    local m = Effective()
+    if m == "tracked" or m == "both" then StateChanged(IsActive()) end
 end
 
 function MapFilter:Peek(down)
@@ -330,9 +346,19 @@ function MapFilter:Init()
     -- restore the saved setting (the hold-to-peek keybind is never saved)
     ns.OnScan(function() MapFilter:TrackingChanged() end)
 
+    local db = ns.db or {}
+    if db.mapMode == nil then
+        -- carry over the old two checkboxes
+        if db.mapCompletedOnly and db.mapTrackedOnly then db.mapMode = "both"
+        elseif db.mapCompletedOnly then db.mapMode = "turnin"
+        elseif db.mapTrackedOnly then db.mapMode = "tracked"
+        else db.mapMode = "all" end
+        db.mapCompletedOnly, db.mapTrackedOnly = nil, nil
+    end
+    if MapFilter.MODE_LABELS[db.mapLastMode] and db.mapLastMode ~= "all" then lastMode = db.mapLastMode end
     local was = IsActive()
-    if ns.db and ns.db.mapCompletedOnly then toggled = true end
-    if ns.db and ns.db.mapTrackedOnly then trackedOnly = true end
+    mode = MapFilter.MODE_LABELS[db.mapMode] and db.mapMode or "all"
+    if mode ~= "all" then lastMode = mode end
     if IsActive() ~= was then StateChanged(was) end
 
 end

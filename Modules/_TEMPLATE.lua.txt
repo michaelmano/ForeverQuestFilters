@@ -10,7 +10,7 @@ ns.MapFilter:RegisterModule({
 
     -- true = keep, false = hide, nil = not mine.
     -- For a quest marker, let the filter decide with KeepQuest(questID, isTurnIn):
-    -- it applies whichever modes are on (completed only, tracked only).
+    -- it applies the chosen marker mode (ready to turn in, tracked, both).
     Classify = function(pin, template)
         if template ~= "MyAddonPinTemplate" then return nil end
         local questID = pin.questID          -- however the addon stores it

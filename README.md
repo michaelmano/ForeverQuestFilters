@@ -10,20 +10,23 @@ top of them: one checkbox hides everything except the quests you can hand in.
 
 ## Features
 
-- **Completed quests only on the map.** Hides every quest marker except
-  completed quests (Questie's turn-in icons, OneForAll's `?` icons, the game's
-  own completed quest pins). Quest start `!` markers, objective icons and other
-  addons' map icons are hidden too. Your player arrow, party members, death
-  markers, zone highlights, labels, your map waypoint and TomTom waypoints stay
-  visible.
-- **Tracked quests only on the map.** Hides every marker except those for the
-  quests you're tracking: their objectives and, once complete, their turn-in.
-  Turn it on together with completed-only to see just tracked quests that are
-  ready to hand in. Uses Questie's tracker when it's on, otherwise the game's.
+- **Choose which quest markers the map shows.** One setting, four choices:
+  - **All markers**: no filtering.
+  - **Ready to turn in**: only where completed quests are handed in (Questie's
+    turn-in icons, OneForAll's `?` icons, the game's own completed quest pins).
+  - **Tracked quests**: only the quests you're tracking: their objectives and,
+    once complete, their turn-in.
+  - **Tracked + ready to turn in**: your tracked quests' markers plus every
+    turn-in.
+
+  With any filter on, quest start `!` markers and other addons' map icons are
+  hidden. Your player arrow, party members, death markers, zone highlights,
+  labels, your map waypoint and TomTom waypoints stay visible. Tracking follows
+  Questie's tracker when it's on, otherwise the game's.
 - **Hand-in route.** Builds a short route from where you are to every NPC you
   can turn a completed quest in to, then guides you along it with waypoints.
-- **Hold-to-peek keybind.** Hold a key to see completed-only markers for a
-  moment and let go to bring everything back. There's also a toggle keybind.
+- **Hold-to-peek keybind.** Hold a key to see only ready-to-turn-in markers for
+  a moment and let go to go back. There's also a toggle keybind.
 - **Quest log filtering and sorting.** Show only completed quests in the quest
   log, and/or sort completed quests to the top of each zone.
 - **Sortable quest list window.** A separate list of every quest in your log,
@@ -60,11 +63,10 @@ None of these addons are required. Each module is idle unless its addon is loade
 Open the world map's filter dropdown. At the bottom, under
 **Forever Quest Filters**:
 
-- **Completed quests only (N)**: toggles completed-only markers. N is the number
-  of quests in your log ready to turn in.
-- **Tracked quests only**: toggles tracked-only markers.
-
-Both settings are remembered between sessions.
+- **Quest markers**: pick one of **All markers**, **Ready to turn in (N)**,
+  **Tracked quests** or **Tracked + ready to turn in**. N is the number of
+  quests in your log ready to turn in. Your choice is remembered between
+  sessions.
 - **Sortable quest list...**: opens the quest list window.
 - **Create hand-in route...**: opens the hand-in route (see below).
 
@@ -110,17 +112,17 @@ Completed quests with no known location are listed at the bottom.
 
 Under Options → Keybindings → Forever Quest Filters:
 
-- **Toggle completed-only map markers**
-- **Hold to show completed-only map markers**
+- **Toggle quest marker filter (off / last used)**
+- **Hold to show ready-to-turn-in markers**
 - **Toggle sortable quest list**
 
 ### Slash commands
 
 | Command | Does |
 |---|---|
-| `/fqf` | Toggle completed-only map markers |
+| `/fqf` | Quest marker filter off, or back to the last one used |
+| `/fqf mode all\|turnin\|tracked\|both` | Pick which quest markers show |
 | `/fqf route` | Create the hand-in route |
-| `/fqf tracked` | Toggle tracked-only map markers |
 | `/fqf log` | Toggle completed quests only in the quest log |
 | `/fqf sort` | Toggle completed-first sorting in the quest log |
 | `/fqf list` | Toggle the sortable quest list window |

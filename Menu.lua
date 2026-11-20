@@ -109,13 +109,20 @@ end
 local function ModifyMapMenu(_, root)
     root:CreateDivider()
     root:CreateTitle("Forever Quest Filters")
-    root:Insert(MenuUtil.CreateCheckbox(
-        ("Completed quests only (%d)"):format(ns.CompletedCount()),
-        function() return ns.MapFilter.IsToggled() end,
-        function() ns.MapFilter:Toggle() end))
-    root:Insert(MenuUtil.CreateCheckbox("Tracked quests only",
-        function() return ns.MapFilter.IsTrackedOnly() end,
-        function() ns.MapFilter:ToggleTracked() end))
+    -- one pick-one choice for which quest markers show
+    root:CreateTitle("Quest markers")
+    local MF = ns.MapFilter
+    for _, m in ipairs(MF.MODES) do
+        local label = MF.MODE_LABELS[m]
+        if m == "turnin" then label = ("%s (%d)"):format(label, ns.CompletedCount()) end
+        local isSel = function() return MF.GetMode() == m end
+        local setSel = function() MF:SetMode(m) end
+        if MenuUtil.CreateRadio then
+            root:Insert(MenuUtil.CreateRadio(label, isSel, setSel, m))
+        else
+            root:Insert(MenuUtil.CreateCheckbox(label, isSel, setSel))
+        end
+    end
     if MenuUtil.CreateButton then
         root:Insert(MenuUtil.CreateButton("Sortable quest list...", function() ns.QuestList:Toggle() end))
         root:Insert(MenuUtil.CreateButton("Create hand-in route...", function() ns.Route:Create() end))
