@@ -20,6 +20,8 @@ top of them: one checkbox hides everything except the quests you can hand in.
   quests you're tracking: their objectives and, once complete, their turn-in.
   Turn it on together with completed-only to see just tracked quests that are
   ready to hand in. Uses Questie's tracker when it's on, otherwise the game's.
+- **Hand-in route.** Builds a short route from where you are to every NPC you
+  can turn a completed quest in to, then guides you along it with waypoints.
 - **Hold-to-peek keybind.** Hold a key to see completed-only markers for a
   moment and let go to bring everything back. There's also a toggle keybind.
 - **Quest log filtering and sorting.** Show only completed quests in the quest
@@ -64,6 +66,7 @@ Open the world map's filter dropdown. At the bottom, under
 
 Both settings are remembered between sessions.
 - **Sortable quest list...**: opens the quest list window.
+- **Create hand-in route...**: opens the hand-in route (see below).
 
 ### Quest log
 
@@ -76,6 +79,29 @@ Both settings are saved between sessions. While either one is on, the game's
 quest list is hidden and the addon draws its own list in the same place.
 Clicking a quest opens its details as usual. The quest log's search box doesn't
 filter the addon's list.
+
+### Hand-in route
+
+**Create hand-in route...** (or `/fqf route`) lists every stop in order: the NPC,
+the zone, the walking distance from the previous stop, and the quests handed in
+there. Quests turned in to the same NPC are one stop, and for an NPC that stands
+in more than one place, the closest spot is used.
+
+- **Start** sets a waypoint to the first stop: TomTom's arrow if TomTom is
+  loaded, otherwise the game's own map waypoint. Once everything at a stop is
+  handed in, the waypoint moves on to the next stop by itself.
+- Click any stop to set the waypoint there instead.
+- **Recalculate** rebuilds the route from where you are now. **Stop** clears the
+  waypoint.
+
+How the route is built: it finishes the continent you're on first, then the
+others. On each continent it goes to the nearest next stop, then reorders stops
+wherever that makes the trip shorter. Distances are straight lines, so flight
+paths, boats and terrain aren't taken into account: it's a short route, not a
+guaranteed shortest one.
+
+Turn-in locations come from Questie, or OneForAll's data when Questie is off.
+Completed quests with no known location are listed at the bottom.
 
 ### Keybinds
 
@@ -90,6 +116,7 @@ Under Options → Keybindings → Forever Quest Filters:
 | Command | Does |
 |---|---|
 | `/fqf` | Toggle completed-only map markers |
+| `/fqf route` | Create the hand-in route |
 | `/fqf tracked` | Toggle tracked-only map markers |
 | `/fqf log` | Toggle completed quests only in the quest log |
 | `/fqf sort` | Toggle completed-first sorting in the quest log |
@@ -130,6 +157,9 @@ ns.MapFilter:RegisterModule({
 
     -- frames drawn straight onto the map (not map pins), same return values
     -- ClassifyFrame = function(frame) return nil end,
+
+    -- hand-in route: report turn-in spots, add(questID, uiMapID, x, y, npcName)
+    -- CollectTurnIns = function(self, add) end,
 
     -- optional:
     -- Init      = function(self) end,  -- once, when the addon is loaded

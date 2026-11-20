@@ -158,6 +158,7 @@ f:SetScript("OnEvent", function(_, event, arg1)
         if ns.MapFilter then ns.MapFilter:Init() end
         if ns.QuestList then ns.QuestList:Init() end
         if ns.QuestLogFilter then ns.QuestLogFilter:Init() end
+        if ns.Route then ns.Route:Init() end
         if ns.Menu then ns.Menu:Init() end
         ScheduleScan()
     elseif event == "UNIT_QUEST_LOG_CHANGED" then
@@ -174,6 +175,8 @@ SlashCmdList.FOREVERQUESTFILTERS = function(msg)
     if msg == "log" then
         ns.QuestLogFilter:Toggle()
         ns.Print("quest log completed-only: " .. (ns.db.questLogCompletedOnly and "on" or "off"))
+    elseif msg == "route" then
+        ns.Route:Toggle()
     elseif msg == "tracked" then
         ns.MapFilter:ToggleTracked()
         ns.Print("tracked quests only on the map: " .. (ns.MapFilter.IsTrackedOnly() and "on" or "off"))
@@ -194,6 +197,7 @@ SlashCmdList.FOREVERQUESTFILTERS = function(msg)
     else
         ns.Print("/fqf  - toggle completed-only map markers")
         ns.Print("/fqf log  - toggle completed-only in the quest log")
+        ns.Print("/fqf route  - create the hand-in route for your completed quests")
         ns.Print("/fqf tracked  - toggle tracked-only map markers")
         ns.Print("/fqf sort  - toggle completed-first sorting in the quest log")
         ns.Print("/fqf list  - toggle the sortable quest list")

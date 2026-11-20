@@ -194,6 +194,20 @@ module = ns.MapFilter:RegisterModule({
 
     OnModeChanged = function() ScheduleDraw() end,
 
+    -- Hand-in route: OneForAll's turn-in spot for each completed quest.
+    CollectTurnIns = function(_, add)
+        local ofa = OFA()
+        if not (ofa and type(ofa.QuestPinLoc) == "function") then return end
+        for _, e in ipairs(ns.questList) do
+            if e.complete then
+                local ok, loc = pcall(ofa.QuestPinLoc, e.questID, true)
+                if ok and type(loc) == "table" and loc.mapID then
+                    add(e.questID, loc.mapID, loc.x, loc.y, loc.name)
+                end
+            end
+        end
+    end,
+
     OnDisable = function(self)
         self.drawing = false
         HideMarkers()

@@ -118,6 +118,7 @@ local function ModifyMapMenu(_, root)
         function() ns.MapFilter:ToggleTracked() end))
     if MenuUtil.CreateButton then
         root:Insert(MenuUtil.CreateButton("Sortable quest list...", function() ns.QuestList:Toggle() end))
+        root:Insert(MenuUtil.CreateButton("Create hand-in route...", function() ns.Route:Create() end))
     end
 end
 
