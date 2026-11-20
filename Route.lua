@@ -82,10 +82,15 @@ end
 ---------------------------------------------------------------------------
 -- Gather turn-in candidates from the modules
 ---------------------------------------------------------------------------
+-- Quests you've chosen to leave out of the route (saved until they leave your log)
+local function IsSkipped(questID)
+    return ns.db and ns.db.routeSkipped and ns.db.routeSkipped[questID] and true or false
+end
+
 local function Collect()
     local byQuest = {} -- [questID] = { candidates }
     local function add(questID, mapID, x, y, npcName)
-        if not (questID and ns.IsQuestComplete(questID)) then return end
+        if not (questID and ns.IsQuestComplete(questID)) or IsSkipped(questID) then return end
         if x and x > 1 then x, y = x / 100, y / 100 end
         local wx, wy, inst = ToWorld(mapID, x, y)
         if not wx then return end
@@ -216,18 +221,22 @@ local function Build()
             route[#route + 1] = s
         end
     end
-    -- completed quests with no known turn-in spot
+    -- completed quests with no known turn-in spot, and the ones you skipped
+    local skipped = {}
     for _, e in ipairs(ns.questList) do
-        if e.complete and not quests[e.questID] then missing[#missing + 1] = e end
+        if e.complete then
+            if IsSkipped(e.questID) then skipped[#skipped + 1] = e
+            elseif not quests[e.questID] then missing[#missing + 1] = e end
+        end
     end
-    return route, missing
+    return route, missing, skipped
 end
 
 ---------------------------------------------------------------------------
 -- Waypoints (TomTom if loaded, else the game's map waypoint)
 ---------------------------------------------------------------------------
 local tomtomUIDs = {}
-Route.stops, Route.missing, Route.current = {}, {}, nil
+Route.stops, Route.missing, Route.skipped, Route.current = {}, {}, {}, nil
 
 local function ClearWaypoints()
     local tt = rawget(_G, "TomTom")
@@ -317,12 +326,45 @@ local function Line(h)
         l.hl:SetAllPoints()
         l.hl:SetColorTexture(1, 1, 1, 0.08)
         l:SetScript("OnClick", function(self) if self.stopIndex then PointTo(self.stopIndex); Route:Render() end end)
+        -- skip checkbox, only on quest lines
+        l.check = CreateFrame("CheckButton", nil, l, "UICheckButtonTemplate")
+        l.check:SetSize(16, 16)
+        l.check:SetPoint("LEFT", 0, 0)
+        l.check:SetScript("OnClick", function(self)
+            local questID = self:GetParent().questID
+            if questID then Route:SetSkipped(questID, self:GetChecked() and true or false) end
+        end)
+        l.check:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:AddLine(self:GetChecked() and "Skipped: untick to put it back in the route"
+                or "Tick to skip this quest in the route")
+            GameTooltip:Show()
+        end)
+        l.check:SetScript("OnLeave", GameTooltip_Hide)
         lines[nLines] = l
     end
-    l.stopIndex = nil
+    l.stopIndex, l.questID = nil, nil
+    l.check:Hide()
+    l.text:ClearAllPoints()
+    l.text:SetPoint("LEFT", 2, 0)
+    l.text:SetPoint("RIGHT", -2, 0)
     l:EnableMouse(false)
     l:SetHeight(h)
     l:Show()
+    return l
+end
+
+-- a quest line with its skip checkbox
+local function QuestLine(questID, title, skipped)
+    local l = Line(16)
+    l.questID = questID
+    l.check:SetChecked(skipped)
+    l.check:Show()
+    l.text:ClearAllPoints()
+    l.text:SetPoint("LEFT", l.check, "RIGHT", 2, 0)
+    l.text:SetPoint("RIGHT", -2, 0)
+    l.text:SetFontObject("GameFontHighlightSmall")
+    l.text:SetText(title)
     return l
 end
 
@@ -357,11 +399,9 @@ function Route:Render()
         place(l, 6)
         for _, q in ipairs(s.quests) do
             local e = ns.questInfo[q]
-            local ql = Line(14)
-            ql.text:SetFontObject("GameFontHighlightSmall")
-            ql.text:SetText("- " .. (e and e.title or ("Quest " .. q)))
+            local ql = QuestLine(q, e and e.title or ("Quest " .. q), false)
             if done or not ns.IsQuestComplete(q) then ql.text:SetTextColor(0.5, 0.5, 0.5) else ql.text:SetTextColor(0.3, 1, 0.3) end
-            place(ql, 18)
+            place(ql, 14)
         end
         total = total + (s.leg or 0)
     end
@@ -379,7 +419,19 @@ function Route:Render()
             place(ql, 18)
         end
     end
-    if #self.stops == 0 and #self.missing == 0 then
+    if #self.skipped > 0 then
+        local h = Line(20)
+        h.text:SetFontObject("GameFontNormal")
+        h.text:SetTextColor(0.7, 0.7, 0.7)
+        h.text:SetText("Skipped")
+        place(h, 2)
+        for _, e in ipairs(self.skipped) do
+            local ql = QuestLine(e.questID, e.title, true)
+            ql.text:SetTextColor(0.6, 0.6, 0.6)
+            place(ql, 14)
+        end
+    end
+    if #self.stops == 0 and #self.missing == 0 and #self.skipped == 0 then
         local l = Line(20)
         l.text:SetFontObject("GameFontDisable")
         l.text:SetText("No completed quests to hand in")
@@ -388,7 +440,9 @@ function Route:Render()
     content:SetHeight(math.max(1, -y + 4))
     local quests = 0
     for _, s in ipairs(self.stops) do quests = quests + #s.quests end
-    summary:SetText(("%d quests, %d stops, about %d yd walking"):format(quests, #self.stops, math.floor(total + 0.5)))
+    local skippedText = #self.skipped > 0 and (", %d skipped"):format(#self.skipped) or ""
+    summary:SetText(("%d quests, %d stops, about %d yd walking%s"):format(
+        quests, #self.stops, math.floor(total + 0.5), skippedText))
 end
 
 local function BuildFrame()
@@ -462,7 +516,7 @@ local function BuildFrame()
     hint:SetPoint("BOTTOMLEFT", 12, 10)
     hint:SetPoint("BOTTOMRIGHT", -12, 10)
     hint:SetJustifyH("LEFT")
-    hint:SetText("Click a stop to set a waypoint. Straight-line distances.")
+    hint:SetText("Click a stop to set a waypoint. Tick a quest to skip it.")
 
     local scroll = CreateFrame("ScrollFrame", "ForeverQuestFiltersRouteScroll", frame, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT", 8, rawget(_G, "TomTom") and -98 or -74)
@@ -482,14 +536,27 @@ function Route:Create()
         return
     end
     ns.ScanLog()
+    -- forget skips for quests that have left your log (turned in or abandoned)
+    if ns.db.routeSkipped then
+        for q in pairs(ns.db.routeSkipped) do
+            if not ns.questInfo[q] then ns.db.routeSkipped[q] = nil end
+        end
+    end
     local wasRunning = self.current ~= nil
-    self.stops, self.missing = Build()
+    self.stops, self.missing, self.skipped = Build()
     self.current = nil
     ClearWaypoints()
     if not frame then BuildFrame() end
     frame:Show()
     self:Render()
     if wasRunning and self.stops[1] then PointTo(1); self:Render() end
+end
+
+-- skip / un-skip a quest and rebuild the route around it
+function Route:SetSkipped(questID, skip)
+    ns.db.routeSkipped = ns.db.routeSkipped or {}
+    ns.db.routeSkipped[questID] = skip or nil
+    self:Create()
 end
 
 function Route:Toggle()

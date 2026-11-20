@@ -98,6 +98,9 @@ in more than one place, the closest spot is used.
   stop on the map as a numbered TomTom waypoint, with the arrow on the current
   one. The route's waypoints are tagged as Forever Quest Filters in TomTom.
 - Click any stop to set the waypoint there instead.
+- Tick the checkbox next to a quest to skip it: the route is rebuilt without
+  it, and it moves to a **Skipped** list at the bottom. Untick it there to put
+  it back. Skips are remembered until the quest leaves your quest log.
 - **Recalculate** rebuilds the route from where you are now. **Stop** clears the
   waypoint.
 
