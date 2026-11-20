@@ -1,0 +1,13 @@
+# BigWigs Packager configuration
+# https://github.com/BigWigsMods/packager/wiki/Preparing-the-PackageMeta-File
+
+package-as: ForeverQuestFilters
+
+# No external libraries: the addon uses the copies other addons already load.
+
+ignore:
+  - .github
+
+# Release notes on CurseForge / GitHub are built from the commit messages
+# since the previous version tag.
+enable-nolib-creation: no

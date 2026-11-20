@@ -186,6 +186,21 @@ ns.MapFilter:RegisterModule({
 - Quests under a collapsed zone in the quest log may be missing from the
   sortable list until that zone is expanded.
 
+## Releasing
+
+Releases are built by the [BigWigs Packager](https://github.com/BigWigsMods/packager)
+GitHub Action (`.github/workflows/release.yml`):
+
+- **From GitHub:** Actions → **Release** → **Run workflow**, then pick
+  `patch`, `minor` or `major`. It tags the next version from the last tag
+  (1.0.1 → 1.0.2 for a patch), zips the addon, and uploads it to CurseForge and
+  GitHub Releases.
+- **From the command line:** push a version tag, e.g.
+  `git tag 1.0.2 && git push origin 1.0.2`.
+
+The version in the `.toc` is `@project-version@`, which the packager replaces
+with the tag. Uploading to CurseForge needs a `CF_API_KEY` repository secret.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).

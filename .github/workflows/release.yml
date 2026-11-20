@@ -1,0 +1,61 @@
+name: Release
+
+# Two ways to release:
+#  1. Actions tab > Release > Run workflow, pick patch / minor / major.
+#     The next version is worked out from the last tag, tagged and released.
+#  2. Push a version tag yourself, e.g.  git tag 1.0.2 && git push origin 1.0.2
+#
+# The packager writes the tag into the .toc (## Version: @project-version@),
+# zips the addon and uploads it to CurseForge (X-Curse-Project-ID in the .toc)
+# and to GitHub Releases.
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Which part of the version to bump"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+
+permissions:
+  contents: write # create the tag and the GitHub release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Check out (with tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bump version and tag
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          last=$(git tag --list '[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1)
+          last=${last:-1.0.1}   # first release continues from 1.0.1
+          IFS=. read -r major minor patch <<< "$last"
+          case "${{ inputs.bump }}" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            *)     patch=$((patch + 1)) ;;
+          esac
+          next="$major.$minor.$patch"
+          echo "Releasing $next (previous: $last)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$next" -m "Version $next"
+          git push origin "$next"
+
+      - name: Package and upload
+        uses: BigWigsMods/packager@v2

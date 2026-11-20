@@ -2,7 +2,7 @@
 ## Title: Forever Quest Filters
 ## Notes: Show only completed-quest markers on the world map (hides Questie, Forever Quest Pins and other addon pins), plus a quest list sortable by completion.
 ## Author: mano
-## Version: 1.0.1
+## Version: @project-version@
 ## Category: Quests
 ## OptionalDeps: Questie, ForeverQuestPins, OneForAll, Leatrix_Maps, TomTom, Books_on_map_Forever
 ## SavedVariables: ForeverQuestFiltersDB
