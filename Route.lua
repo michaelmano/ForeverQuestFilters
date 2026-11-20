@@ -241,6 +241,16 @@ local function StopTitle(i, s)
     return ("Hand-in %d: %s"):format(i, s.name or MapName(s.mapID))
 end
 
+local StopDone -- defined below
+
+local function AddTomTom(tt, i, s, crazy)
+    local ok, uid = pcall(tt.AddWaypoint, tt, s.mapID, s.x, s.y, {
+        title = StopTitle(i, s), from = "ForeverQuestFilters",
+        persistent = false, crazy = crazy, minimap = true, world = true,
+    })
+    if ok and uid then tomtomUIDs[#tomtomUIDs + 1] = uid end
+end
+
 local function PointTo(i)
     local s = Route.stops[i]
     Route.current = s and i or nil
@@ -248,10 +258,14 @@ local function PointTo(i)
     if not s then return end
     local tt = rawget(_G, "TomTom")
     if tt and tt.AddWaypoint then
-        local ok, uid = pcall(tt.AddWaypoint, tt, s.mapID, s.x, s.y, {
-            title = StopTitle(i, s), persistent = false, crazy = true, minimap = true, world = true,
-        })
-        if ok and uid then tomtomUIDs[#tomtomUIDs + 1] = uid end
+        -- with "show all stops", every unfinished stop gets a numbered
+        -- waypoint; the arrow points at the current one (added last)
+        if ns.db.routeAllWaypoints then
+            for k, other in ipairs(Route.stops) do
+                if k ~= i and not StopDone(other) then AddTomTom(tt, k, other, false) end
+            end
+        end
+        AddTomTom(tt, i, s, true)
     elseif C_Map and C_Map.SetUserWaypoint and UiMapPoint and UiMapPoint.CreateFromCoordinates then
         pcall(C_Map.SetUserWaypoint, UiMapPoint.CreateFromCoordinates(s.mapID, s.x, s.y))
         if C_SuperTrack and C_SuperTrack.SetSuperTrackedUserWaypoint then
@@ -261,7 +275,7 @@ local function PointTo(i)
     ns.Print(("%s (%s)"):format(StopTitle(i, s), MapName(s.mapID)))
 end
 
-local function StopDone(s)
+function StopDone(s)
     for _, q in ipairs(s.quests) do
         if ns.IsQuestComplete(q) then return false end -- still in the log, ready
     end
@@ -430,6 +444,20 @@ local function BuildFrame()
     stop:SetText("Stop")
     stop:SetScript("OnClick", function() Route.current = nil; ClearWaypoints(); Route:Render() end)
 
+    -- TomTom (the /way addon): optionally put every stop on the map at once
+    local all = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+    all:SetSize(22, 22)
+    all:SetPoint("TOPLEFT", start, "BOTTOMLEFT", -2, -2)
+    local allLabel = all:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    allLabel:SetPoint("LEFT", all, "RIGHT", 0, 1)
+    allLabel:SetText("Show all stops in TomTom")
+    all:SetScript("OnShow", function(self) self:SetChecked(ns.db.routeAllWaypoints and true or false) end)
+    all:SetScript("OnClick", function(self)
+        ns.db.routeAllWaypoints = self:GetChecked() and true or false
+        if Route.current then PointTo(Route.current) end
+    end)
+    all:SetShown(rawget(_G, "TomTom") ~= nil)
+
     local hint = frame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     hint:SetPoint("BOTTOMLEFT", 12, 10)
     hint:SetPoint("BOTTOMRIGHT", -12, 10)
@@ -437,7 +465,7 @@ local function BuildFrame()
     hint:SetText("Click a stop to set a waypoint. Straight-line distances.")
 
     local scroll = CreateFrame("ScrollFrame", "ForeverQuestFiltersRouteScroll", frame, "UIPanelScrollFrameTemplate")
-    scroll:SetPoint("TOPLEFT", 8, -74)
+    scroll:SetPoint("TOPLEFT", 8, rawget(_G, "TomTom") and -98 or -74)
     scroll:SetPoint("BOTTOMRIGHT", -30, 26)
     content = CreateFrame("Frame", nil, scroll)
     content:SetSize(290, 1)

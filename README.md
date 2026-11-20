@@ -90,6 +90,9 @@ in more than one place, the closest spot is used.
 - **Start** sets a waypoint to the first stop: TomTom's arrow if TomTom is
   loaded, otherwise the game's own map waypoint. Once everything at a stop is
   handed in, the waypoint moves on to the next stop by itself.
+- With TomTom (`/way`) loaded, **Show all stops in TomTom** puts every remaining
+  stop on the map as a numbered TomTom waypoint, with the arrow on the current
+  one. The route's waypoints are tagged as Forever Quest Filters in TomTom.
 - Click any stop to set the waypoint there instead.
 - **Recalculate** rebuilds the route from where you are now. **Stop** clears the
   waypoint.
