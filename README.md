@@ -13,8 +13,9 @@ top of them: one checkbox hides everything except the quests you can hand in.
 - **Completed quests only on the map.** Hides every quest marker except
   completed quests (Questie's turn-in icons, OneForAll's `?` icons, the game's
   own completed quest pins). Quest start `!` markers, objective icons and other
-  addons' map icons are hidden too. Your player arrow, party members, zone
-  highlights, labels and your map waypoint stay visible.
+  addons' map icons are hidden too. Your player arrow, party members, death
+  markers, zone highlights, labels, your map waypoint and TomTom waypoints stay
+  visible.
 - **Tracked quests only on the map.** Hides every marker except those for the
   quests you're tracking: their objectives and, once complete, their turn-in.
   Turn it on together with completed-only to see just tracked quests that are
@@ -36,6 +37,7 @@ top of them: one checkbox hides everything except the quests you can hand in.
 | Questie | Turn-in icons stay, all other icons are hidden |
 | Forever Quest Pins | All `!` quest start markers are hidden |
 | OneForAll | `?` turn-in icons stay, `!` icons and walking routes are hidden. On the world view, where OneForAll draws nothing, `?` markers for your completed quests are added from OneForAll's turn-in data |
+| TomTom | Waypoints (`/way`, corpse waypoint) always stay |
 | Leatrix Maps | Its POI icons are hidden; revealed areas and overlays stay |
 | WoW Forever (default) | Quest pins stay only for completed quests |
 | Anything else | Small icons drawn on the map are hidden |

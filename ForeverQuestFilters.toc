@@ -11,6 +11,7 @@
 Core.lua
 MapFilter.lua
 Modules\BaseMap.lua
+Modules\TomTom.lua
 Modules\Questie.lua
 Modules\ForeverQuestPins.lua
 Modules\OneForAll.lua
