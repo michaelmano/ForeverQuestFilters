@@ -51,6 +51,9 @@ local function LogItems()
     }
     if MenuUtil.CreateButton then
         items[#items + 1] = MenuUtil.CreateButton(
+            ("Untrack all quests (%d)"):format(ns.TrackedCount()),
+            function() ns.UntrackAll() end)
+        items[#items + 1] = MenuUtil.CreateButton(
             ("Create hand-in route (%d)..."):format(ns.CompletedCount()),
             function() ns.Route:Create() end)
     end
@@ -131,6 +134,8 @@ local function ModifyMapMenu(_, root)
     end
     if MenuUtil.CreateButton then
         root:Insert(MenuUtil.CreateButton("Sortable quest list...", function() ns.QuestList:Toggle() end))
+        root:Insert(MenuUtil.CreateButton(("Untrack all quests (%d)"):format(ns.TrackedCount()),
+            function() ns.UntrackAll() end))
         root:Insert(MenuUtil.CreateButton("Create hand-in route...", function() ns.Route:Create() end))
     end
 end

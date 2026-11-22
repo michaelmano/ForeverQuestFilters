@@ -122,6 +122,59 @@ function ns.IsQuestTracked(questID)
     return false
 end
 
+function ns.TrackedCount()
+    local n = 0
+    for _, e in ipairs(ns.questList) do if ns.IsQuestTracked(e.questID) then n = n + 1 end end
+    return n
+end
+
+-- Stop tracking one quest, in Questie's tracker (when it's on) and in the
+-- game's quest watch list.
+local function UntrackQuest(e)
+    local id = e.questID
+    if QuestieTracking(id) ~= nil then
+        local loader = rawget(_G, "QuestieLoader")
+        local tracker = type(loader) == "table" and loader.ImportModule
+            and Call(loader.ImportModule, loader, "QuestieTracker")
+        if type(tracker) == "table" and type(tracker.UntrackQuestId) == "function" then
+            Call(tracker.UntrackQuestId, tracker, id)
+        else
+            local db = Questie.db
+            if db.profile.autoTrackQuests then
+                db.char.AutoUntrackedQuests = db.char.AutoUntrackedQuests or {}
+                db.char.AutoUntrackedQuests[id] = true
+            elseif db.char.TrackedQuests then
+                db.char.TrackedQuests[id] = nil
+            end
+        end
+    end
+    if C_QuestLog and C_QuestLog.RemoveQuestWatch then
+        Call(C_QuestLog.RemoveQuestWatch, id)
+    elseif RemoveQuestWatch and e.index then
+        Call(RemoveQuestWatch, e.index)
+    end
+end
+
+function ns.UntrackAll()
+    local n = 0
+    -- copy first: untracking can trigger a rescan that rebuilds questList
+    local entries = {}
+    for _, e in ipairs(ns.questList) do
+        if ns.IsQuestTracked(e.questID) then entries[#entries + 1] = e end
+    end
+    -- classic's watch list is by log index, so go bottom-up
+    for k = #entries, 1, -1 do UntrackQuest(entries[k]); n = n + 1 end
+    local loader = rawget(_G, "QuestieLoader")
+    local tracker = type(loader) == "table" and loader.ImportModule
+        and Call(loader.ImportModule, loader, "QuestieTracker")
+    if type(tracker) == "table" and type(tracker.Update) == "function" then Call(tracker.Update, tracker) end
+    if WatchFrame_Update then Call(WatchFrame_Update) end
+    if QuestWatch_Update then Call(QuestWatch_Update) end
+    ns.ScanLog()
+    ns.Print(n == 1 and "untracked 1 quest" or ("untracked %d quests"):format(n))
+    return n
+end
+
 function ns.OnScan(fn) ns.listeners[#ns.listeners + 1] = fn end
 
 local pending = false
@@ -176,6 +229,8 @@ SlashCmdList.FOREVERQUESTFILTERS = function(msg)
         ns.Print("quest log completed-only: " .. (ns.db.questLogCompletedOnly and "on" or "off"))
     elseif msg == "route" then
         ns.Route:Toggle()
+    elseif msg == "untrack" then
+        ns.UntrackAll()
     elseif msg == "mode" or msg:match("^mode%s") or msg == "tracked" or msg == "turnin" or msg == "both" or msg == "all" then
         local m = msg:match("^mode%s+(%S+)") or msg
         if not ns.MapFilter.MODE_LABELS[m] then
@@ -203,6 +258,7 @@ SlashCmdList.FOREVERQUESTFILTERS = function(msg)
         ns.Print("/fqf  - quest marker filter off / back to the last one used")
         ns.Print("/fqf mode all|turnin|tracked|both  - pick which quest markers show")
         ns.Print("/fqf log  - toggle completed-only in the quest log")
+        ns.Print("/fqf untrack  - untrack all quests")
         ns.Print("/fqf route  - create the hand-in route for your completed quests")
         ns.Print("/fqf sort  - toggle completed-first sorting in the quest log")
         ns.Print("/fqf list  - toggle the sortable quest list")
